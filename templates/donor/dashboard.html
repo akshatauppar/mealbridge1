@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Dashboard - MealBridge{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-utensils"></i> Donor Dashboard</h2>
+                <a href="{{ url_for('donate_food') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Donate Food
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ donations|length }}</div>
+                <div class="stats-label">Total Donations</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ donations|selectattr('status', 'equalto', 'available')|list|length }}</div>
+                <div class="stats-label">Available</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ donations|selectattr('status', 'equalto', 'claimed')|list|length }}</div>
+                <div class="stats-label">Claimed</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ certificates|length }}</div>
+                <div class="stats-label">Certificates</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Donations List -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> My Donations</h5>
+                </div>
+                <div class="card-body">
+                    {% if donations %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Food Item</th>
+                                        <th>Quantity</th>
+                                        <th>Status</th>
+                                        <th>Expiry</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for donation in donations %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ donation.food_name }}</strong>
+                                            <br><small class="text-muted">{{ donation.food_type }}</small>
+                                        </td>
+                                        <td>{{ donation.quantity }}</td>
+                                        <td>
+                                            {% if donation.status == 'available' %}
+                                                <span class="badge bg-success">Available</span>
+                                            {% elif donation.status == 'claimed' %}
+                                                <span class="badge bg-primary">Claimed</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Expired</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ donation.expiry_date_time.strftime('%m/%d/%Y %H:%M') }}
+                                            {% set three_hours_from_now = now + timedelta(hours=3) %}
+                                            {% if donation.expiry_date_time <= three_hours_from_now %}
+                                                <br><small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Expires soon!</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ donation.created_at.strftime('%m/%d/%Y') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="viewDonation({{ donation.id }})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if donation.status == 'claimed' %}
+                                                    <button class="btn btn-outline-success" onclick="trackDelivery({{ donation.id }})">
+                                                        <i class="fas fa-truck"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-utensils" style="font-size: 3rem; color: var(--secondary-color); opacity: 0.5;"></i>
+                            <p class="text-muted mt-3">No donations yet. <a href="{{ url_for('donate_food') }}">Make your first donation!</a></p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Certificates -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-certificate"></i> My Certificates</h5>
+                </div>
+                <div class="card-body">
+                    {% if certificates %}
+                        {% for certificate in certificates %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>Certificate #{{ certificate.id }}</strong>
+                                <br><small class="text-muted">{{ certificate.sent_at.strftime('%m/%d/%Y') }}</small>
+                            </div>
+                            <a href="{{ certificate.certificate_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No certificates yet. Complete deliveries to earn certificates!</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('donate_food') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Donate Food
+                        </a>
+                        <a href="{{ url_for('requestor_dashboard') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i> Browse Requests
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donation Details Modal -->
+<div class="modal fade" id="donationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Donation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="donationModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewDonation(donationId) {
+    // This would typically make an AJAX call to get donation details
+    // For now, we'll show a placeholder
+    document.getElementById('donationModalBody').innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading donation details...</p>
+        </div>
+    `;
+    
+    var modal = new bootstrap.Modal(document.getElementById('donationModal'));
+    modal.show();
+}
+
+function trackDelivery(donationId) {
+    // This would show delivery tracking information
+    alert('Delivery tracking feature coming soon!');
+}
+</script>
+{% endblock %}

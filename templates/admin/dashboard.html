@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - MealBridge{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-cogs"></i> Admin Dashboard</h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_users }}</div>
+                <div class="stats-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_donations }}</div>
+                <div class="stats-label">Total Donations</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_requests }}</div>
+                <div class="stats-label">Total Requests</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_deliveries }}</div>
+                <div class="stats-label">Total Deliveries</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ completed_deliveries }}</div>
+                <div class="stats-label">Completed</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ (completed_deliveries / total_deliveries * 100) | round(1) if total_deliveries > 0 else 0 }}%</div>
+                <div class="stats-label">Success Rate</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="sidebar">
+                <h5 class="mb-3">Admin Panel</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="showSection('overview')">
+                            <i class="fas fa-chart-pie"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('users')">
+                            <i class="fas fa-users"></i> Manage Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('donations')">
+                            <i class="fas fa-utensils"></i> Manage Donations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('deliveries')">
+                            <i class="fas fa-truck"></i> Manage Deliveries
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('reports')">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Overview Section -->
+            <div id="overviewSection" class="admin-section">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-clock"></i> Recent Donations</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if recent_donations %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Food Item</th>
+                                                    <th>Donor</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for donation in recent_donations %}
+                                                <tr>
+                                                    <td>{{ donation.food_name }}</td>
+                                                    <td>{{ donation.donor.full_name }}</td>
+                                                    <td>
+                                                        {% if donation.status == 'available' %}
+                                                            <span class="badge bg-success">Available</span>
+                                                        {% elif donation.status == 'claimed' %}
+                                                            <span class="badge bg-primary">Claimed</span>
+                                                        {% else %}
+                                                            <span class="badge bg-danger">Expired</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ donation.created_at.strftime('%m/%d') }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No recent donations</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-user-plus"></i> Recent Users</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if recent_users %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Role</th>
+                                                    <th>Joined</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for user in recent_users %}
+                                                <tr>
+                                                    <td>{{ user.full_name }}</td>
+                                                    <td>
+                                                        <span class="badge bg-info">{{ user.role|title }}</span>
+                                                    </td>
+                                                    <td>{{ user.created_at.strftime('%m/%d') }}</td>
+                                                    <td>
+                                                        {% if user.is_verified %}
+                                                            <span class="badge bg-success">Verified</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning">Pending</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No recent users</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <button class="btn btn-primary w-100" onclick="showSection('users')">
+                                    <i class="fas fa-users"></i><br>Manage Users
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <button class="btn btn-success w-100" onclick="showSection('donations')">
+                                    <i class="fas fa-utensils"></i><br>Manage Donations
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <button class="btn btn-info w-100" onclick="showSection('deliveries')">
+                                    <i class="fas fa-truck"></i><br>Manage Deliveries
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <button class="btn btn-warning w-100" onclick="showSection('reports')">
+                                    <i class="fas fa-chart-bar"></i><br>View Reports
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Section -->
+            <div id="usersSection" class="admin-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-users"></i> User Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">User management features will be implemented here.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            This section will include user approval, blocking, role management, and user statistics.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Donations Section -->
+            <div id="donationsSection" class="admin-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-utensils"></i> Donation Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Donation management features will be implemented here.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            This section will include donation approval, rejection, and monitoring of food safety.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deliveries Section -->
+            <div id="deliveriesSection" class="admin-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-truck"></i> Delivery Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Delivery management features will be implemented here.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            This section will include delivery assignment, tracking, and performance monitoring.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reports Section -->
+            <div id="reportsSection" class="admin-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Reports and analytics will be implemented here.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            This section will include detailed analytics, charts, and exportable reports.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(sectionName) {
+    // Hide all sections
+    const sections = document.querySelectorAll('.admin-section');
+    sections.forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Show selected section
+    document.getElementById(sectionName + 'Section').style.display = 'block';
+    
+    // Update active nav link
+    const navLinks = document.querySelectorAll('.sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    event.target.classList.add('active');
+}
+
+function refreshData() {
+    location.reload();
+}
+
+// Auto-refresh data every 60 seconds
+setInterval(function() {
+    refreshData();
+}, 60000);
+</script>
+{% endblock %}

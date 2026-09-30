@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="hero-title fade-in-up">Connecting Surplus Meals to Those in Need</h1>
+                <p class="hero-subtitle fade-in-up">Join MealBridge to reduce food waste and help feed our communities. Every meal matters.</p>
+                <div class="hero-buttons fade-in-up">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">
+                            <i class="fas fa-user-plus"></i> Get Started
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-heart" style="font-size: 8rem; color: var(--primary-color); opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-4 fw-bold mb-3">How MealBridge Works</h2>
+                <p class="lead text-muted">Simple steps to make a big difference</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-utensils" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Donate Food</h5>
+                        <p class="card-text">Share your surplus food with those in need. Our platform ensures safe and timely distribution.</p>
+                        {% if current_user.is_authenticated and current_user.role == 'donor' %}
+                            <a href="{{ url_for('donate_food') }}" class="btn btn-outline-primary">Donate Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-search" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Find Food</h5>
+                        <p class="card-text">Browse available donations near you. Get real-time updates and location-based matching.</p>
+                        {% if current_user.is_authenticated and current_user.role == 'requestor' %}
+                            <a href="{{ url_for('requestor_dashboard') }}" class="btn btn-outline-primary">Find Food</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-truck" style="font-size: 3rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h5 class="card-title">Deliver Hope</h5>
+                        <p class="card-text">Join our delivery network to help transport food from donors to those who need it most.</p>
+                        {% if current_user.is_authenticated and current_user.role == 'delivery_partner' %}
+                            <a href="{{ url_for('delivery_dashboard') }}" class="btn btn-outline-primary">View Deliveries</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--pastel-green), var(--pastel-teal));">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-4 fw-bold mb-3">Our Impact</h2>
+                <p class="lead">Together, we're making a difference in our communities</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_donations }}</div>
+                    <div class="stats-label">Food Donations</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_users }}</div>
+                    <div class="stats-label">Active Users</div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="stats-card">
+                    <div class="stats-number">{{ total_deliveries }}</div>
+                    <div class="stats-label">Meals Delivered</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold mb-4">Why Choose MealBridge?</h2>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--success-color);"></i>
+                            </div>
+                            <div>
+                                <h5>Food Safety</h5>
+                                <p class="text-muted mb-0">Smart expiry validation ensures only safe food is distributed.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-map-marker-alt" style="font-size: 2rem; color: var(--info-color);"></i>
+                            </div>
+                            <div>
+                                <h5>Location-Based Matching</h5>
+                                <p class="text-muted mb-0">Find food donations near you with our smart location system.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-certificate" style="font-size: 2rem; color: var(--warning-color);"></i>
+                            </div>
+                            <div>
+                                <h5>Digital Certificates</h5>
+                                <p class="text-muted mb-0">Receive appreciation certificates for your contributions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-leaf" style="font-size: 10rem; color: var(--primary-color); opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--primary-color), #17a2b8); color: white;">
+    <div class="container text-center">
+        <h2 class="display-4 fw-bold mb-4">Ready to Make a Difference?</h2>
+        <p class="lead mb-4">Join thousands of people who are already helping reduce food waste and feed those in need.</p>
+        {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                <i class="fas fa-rocket"></i> Get Started Today
+            </a>
+        {% else %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">
+                <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add some interactive animations
+    $(document).ready(function() {
+        // Animate stats on scroll
+        $(window).scroll(function() {
+            $('.stats-number').each(function() {
+                var elementTop = $(this).offset().top;
+                var elementBottom = elementTop + $(this).outerHeight();
+                var viewportTop = $(window).scrollTop();
+                var viewportBottom = viewportTop + $(window).height();
+                
+                if (elementBottom > viewportTop && elementTop < viewportBottom) {
+                    $(this).addClass('pulse');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

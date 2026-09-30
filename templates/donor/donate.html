@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Donate Food - MealBridge{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-utensils"></i> Donate Food
+                    </h3>
+                    <p class="text-muted mb-0">Share your surplus food with those in need</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="donateForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="food_name" class="form-label">Food Name *</label>
+                                <input type="text" class="form-control" id="food_name" name="food_name" required>
+                                <div class="form-text">e.g., Fresh Pizza, Packed Lunch, Fruits</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="quantity" class="form-label">Quantity *</label>
+                                <input type="text" class="form-control" id="quantity" name="quantity" required>
+                                <div class="form-text">e.g., 2 plates, 5 kg, 10 pieces</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="food_type" class="form-label">Food Type *</label>
+                            <select class="form-select" id="food_type" name="food_type" required>
+                                <option value="">Select food type</option>
+                                <option value="prepared">Prepared Food (Ready to eat)</option>
+                                <option value="raw">Raw Ingredients</option>
+                                <option value="packaged">Packaged Food</option>
+                                <option value="beverages">Beverages</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Additional details about the food..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Pickup Location *</label>
+                            <input type="text" class="form-control" id="location" name="location" required placeholder="Enter full address">
+                            <div class="form-text">Please provide the complete address where the food can be picked up</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="expiry_date" class="form-label">Expiry Date *</label>
+                                <input type="date" class="form-control" id="expiry_date" name="expiry_date" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="expiry_time" class="form-label">Expiry Time *</label>
+                                <input type="time" class="form-control" id="expiry_time" name="expiry_time" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Expiry Warning -->
+                        <div class="alert alert-warning d-none" id="expiryWarning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Warning:</strong> This food may expire too soon to be redistributed safely. Consider donating earlier next time.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contact_info" class="form-label">Contact Information</label>
+                            <input type="text" class="form-control" id="contact_info" name="contact_info" placeholder="Phone number or additional contact details">
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('donor_dashboard') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-heart"></i> Submit Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const expiryDateInput = document.getElementById('expiry_date');
+    const expiryTimeInput = document.getElementById('expiry_time');
+    const expiryWarning = document.getElementById('expiryWarning');
+    
+    function checkExpiry() {
+        const date = expiryDateInput.value;
+        const time = expiryTimeInput.value;
+        
+        if (date && time) {
+            const expiryDateTime = new Date(date + 'T' + time);
+            const now = new Date();
+            const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+            
+            if (expiryDateTime <= now) {
+                expiryWarning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> Expiry date and time must be in the future!';
+                expiryWarning.className = 'alert alert-danger';
+                expiryWarning.classList.remove('d-none');
+            } else if (expiryDateTime <= threeHoursFromNow) {
+                expiryWarning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> This food may expire too soon to be redistributed safely.';
+                expiryWarning.className = 'alert alert-warning';
+                expiryWarning.classList.remove('d-none');
+            } else {
+                expiryWarning.classList.add('d-none');
+            }
+        }
+    }
+    
+    expiryDateInput.addEventListener('change', checkExpiry);
+    expiryTimeInput.addEventListener('change', checkExpiry);
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    expiryDateInput.setAttribute('min', today);
+    
+    // Set minimum time to current time if date is today
+    expiryDateInput.addEventListener('change', function() {
+        if (this.value === today) {
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5);
+            expiryTimeInput.setAttribute('min', currentTime);
+        } else {
+            expiryTimeInput.removeAttribute('min');
+        }
+    });
+    
+    // Form validation
+    document.getElementById('donateForm').addEventListener('submit', function(e) {
+        const date = expiryDateInput.value;
+        const time = expiryTimeInput.value;
+        
+        if (date && time) {
+            const expiryDateTime = new Date(date + 'T' + time);
+            const now = new Date();
+            
+            if (expiryDateTime <= now) {
+                e.preventDefault();
+                alert('Expiry date and time must be in the future!');
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
